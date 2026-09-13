@@ -881,7 +881,8 @@ function vape:LoadGUI()
 	scarcitybanner.FontFace = uipallet.Font
 	scarcitybanner.Position = UDim2.fromScale(0, 0.97)
 	scarcitybanner.Size = UDim2.fromScale(1, 0.018)
-	scarcitybanner.Text = 'All update logs and game support are found in the discord, click the discord icon to join.'
+	scarcitybanner.Text = ''
+	scarcitybanner.Visible = false
 	scarcitybanner.TextColor3 = Color3.new(1, 1, 1)
 	scarcitybanner.TextScaled = true
 	scarcitybanner.TextStrokeTransparency = 0.5
@@ -952,6 +953,16 @@ function vape:LoadGUI()
 	vape.Categories.Main:CreateDivider({
 		Text = 'misc'
 	})
+	
+	-- Keep utility categories available to existing modules, but do not show them by default.
+	-- Script-created Orion tabs are still visible when their first module is added.
+	for _, name in {'Combat', 'Blatant', 'Render', 'Utility', 'World', 'Inventory'} do
+		local category = vape.Categories[name]
+		if category then
+			category.Object.Visible = false
+			category.Button.Object.Visible = false
+		end
+	end
 	
 	--[[
 		Friends
@@ -4688,13 +4699,6 @@ components = {
 		settingsicon.Position = UDim2.fromOffset(15, 12)
 		settingsicon.Size = UDim2.fromOffset(14, 14)
 		settingsicon.Parent = settingsbutton
-		local discord = Instance.new('ImageButton')
-		discord.BackgroundTransparency = 1
-		discord.Image = getvapeasset('newvape/assets/new/discord.png')
-		discord.Position = UDim2.new(1, -56, 0, 11)
-		discord.Size = UDim2.fromOffset(16, 16)
-		discord.Parent = window
-		addTooltip(discord, 'Join discord')
 		local stroke = Instance.new('UIStroke')
 		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 		stroke.Color = Color3.fromRGB(85, 85, 85)
@@ -4753,40 +4757,6 @@ components = {
 			end
 		end
 		
-		discord.MouseButton1Click:Connect(function()
-			task.spawn(function()
-				local body = httpService:JSONEncode({
-					nonce = httpService:GenerateGUID(false),
-					args = {
-						invite = {code = 'VZEQJxMSnG'},
-						code = 'VZEQJxMSnG'
-					},
-					cmd = 'INVITE_BROWSER'
-				})
-		
-				for i = 1, 14 do
-					task.spawn(function()
-						pcall(function()
-							request({
-								Method = 'POST',
-								Url = 'http://127.0.0.1:64'..(53 + i)..'/rpc?v=1',
-								Headers = {
-									['Content-Type'] = 'application/json',
-									Origin = 'https://discord.com'
-								},
-								Body = body
-							})
-						end)
-					end)
-				end
-			end)
-		
-			task.spawn(function()
-				tooltip.Text = 'Copied!'
-				setclipboard('https://discord.gg/VZEQJxMSnG')
-			end)
-		end)
-		
 		settingsbutton.MouseEnter:Connect(function()
 			settingsicon.ImageColor3 = uipallet.Text
 		end)
@@ -4815,6 +4785,7 @@ components = {
 		vape.Categories.Main = component
 		
 		return component
+		
 	end,
 	GUIButton = function(props, children, api)
 		local component = {

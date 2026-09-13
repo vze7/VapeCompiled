@@ -3770,6 +3770,9 @@ components = {
 			Type = 'ChoiceList',
 			Value = props.Multi and {} or nil,
 			List = {},
+			Options = {},
+			Multi = props.Multi == true,
+			Searchable = props.Searchable == true,
 			Expanded = false
 		}
 		
@@ -3985,12 +3988,34 @@ components = {
 		
 		function component:Refresh(list, replace)
 			self.List = normalize(list)
+			self.Options = {}
+			for _, item in self.List do
+				table.insert(self.Options, item.value)
+			end
 			if replace then self.Value = props.Multi and {} or nil end
 			updateTitle()
 			render(search and search.Text or '')
 		end
 		
 		component.Change = component.Refresh
+		function component:Get()
+			return props.Multi and table.clone(self.Value) or self.Value
+		end
+		
+		function component:Has(value)
+			return props.Multi and table.find(self.Value, value) ~= nil or self.Value == value
+		end
+		
+		function component:UpdSel()
+			updateTitle()
+			render(search and search.Text or '')
+		end
+		
+		function component:UpdVis()
+			self.Expanded = not not self.Expanded
+			panel.Visible = self.Expanded
+			updateSize()
+		end
 		
 		function component:Load(data)
 			self:Set(data.Value)
@@ -4015,6 +4040,9 @@ components = {
 		end
 		
 		component.List = normalize(props.List)
+		for _, item in component.List do
+			table.insert(component.Options, item.value)
+		end
 		component.Value = props.Multi and table.clone(props.Default or {}) or props.Default or (component.List[1] and component.List[1].value)
 		updateTitle()
 		render()

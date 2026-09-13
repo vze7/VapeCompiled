@@ -163,6 +163,11 @@ return function(vape)
 
 		function section:AddPbind(config)
 			local values = {config.DefaultX or '0', config.DefaultY or '0', config.DefaultZ or '0'}
+			local pbind = {Values = values, Enabled = false}
+			function pbind:toggle()
+				self.Enabled = not self.Enabled
+			end
+			pbind.Toggle = pbind.toggle
 			for index, axis in {'X', 'Y', 'Z'} do
 				local native
 				native = module:CreateTextBox({
@@ -173,6 +178,7 @@ return function(vape)
 					end
 				})
 			end
+			return pbind
 		end
 
 		function section:AddSmartTheme()
@@ -199,6 +205,8 @@ return function(vape)
 				Icon = tabConfig.Icon or 'rbxasset://textures/ui/GuiImagePlaceholder.png',
 				Size = UDim2.fromOffset(16, 16)
 			})
+			tab.Category.Object.Visible = true
+			tab.Category.Button.Object.Visible = true
 			function tab:AddSection(sectionConfig)
 				local section = makeSection(self, type(sectionConfig) == 'table' and sectionConfig.Name or tostring(sectionConfig))
 				table.insert(self.Sections, section)

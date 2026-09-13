@@ -2900,6 +2900,22 @@ components = {
 		end)
 		
 		button.MouseButton1Click:Connect(props.Function)
+		
+		local component = {
+			Type = 'Button',
+			Name = props.Name,
+			Object = button
+		}
+		
+		function component:Set(name)
+			if name ~= nil then
+				component.Name = tostring(name)
+				title.Text = component.Name
+			end
+		end
+		
+		return component
+		
 	end,
 	Category = function(props, children, api)
 		local component = {
@@ -3773,6 +3789,7 @@ components = {
 			Options = {},
 			Multi = props.Multi == true,
 			Searchable = props.Searchable == true,
+			Toggled = false,
 			Expanded = false
 		}
 		
@@ -3955,6 +3972,7 @@ components = {
 					else
 						component.Value = item.value
 						component.Expanded = false
+						component.Toggled = false
 						panel.Visible = false
 						arrow.Rotation = 90
 					end
@@ -3967,17 +3985,24 @@ components = {
 		end
 		
 		function component:Set(value, enabled)
-			if props.Multi and type(value) ~= 'table' then
-				local index = table.find(self.Value, value)
-				if enabled == true and not index then
-					table.insert(self.Value, value)
-				elseif enabled == false and index then
-					table.remove(self.Value, index)
-				elseif enabled == nil then
-					if index then table.remove(self.Value, index) else table.insert(self.Value, value) end
+			if props.Multi then
+				local values = type(value) == 'table' and value or {value}
+				if enabled == nil and type(value) == 'table' then
+					self.Value = table.clone(value)
+				else
+					for _, entry in values do
+						local index = table.find(self.Value, entry)
+						if enabled == true and not index then
+							table.insert(self.Value, entry)
+						elseif enabled == false and index then
+							table.remove(self.Value, index)
+						elseif enabled == nil then
+							if index then table.remove(self.Value, index) else table.insert(self.Value, entry) end
+						end
+					end
 				end
 			else
-				self.Value = props.Multi and table.clone(value or {}) or value
+				self.Value = value
 			end
 			updateTitle()
 			render(search and search.Text or '')
@@ -4012,7 +4037,7 @@ components = {
 		end
 		
 		function component:UpdVis()
-			self.Expanded = not not self.Expanded
+			if self.Toggled ~= nil then self.Expanded = self.Toggled end
 			panel.Visible = self.Expanded
 			updateSize()
 		end
@@ -4027,6 +4052,7 @@ components = {
 		
 		button.MouseButton1Click:Connect(function()
 			component.Expanded = not component.Expanded
+			component.Toggled = component.Expanded
 			panel.Visible = component.Expanded
 			arrow.Rotation = component.Expanded and 270 or 90
 			if not component.Expanded and search then search:ReleaseFocus(); search.Text = '' end
